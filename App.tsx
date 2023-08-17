@@ -14,7 +14,6 @@ import {Pressable, View, StyleSheet, Text} from 'react-native';
 
 function App(): JSX.Element {
   const [value, setValue] = React.useState(false);
-
   const height = useSharedValue(100);
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -23,24 +22,17 @@ function App(): JSX.Element {
       height: height.value,
       width: '100%',
     };
-  }, []);
+  });
 
   const animate = React.useCallback(() => {
     setValue(v => !v);
     height.value = height.value === 100 ? 200 : 100;
   }, [height]);
 
-  const foo = useAnimatedStyle(() => {
-    return {
-      backgroundColor: 'green',
-      flex: 1,
-    };
-  }, []);
-
   return (
     <View style={styles.container}>
       <Reanimated.View style={animatedStyle}>
-        <Reanimated.View key={value ? 1 : 2} style={foo} />
+        <Reanimated.View key={value ? 1 : 2} style={styles.inner} />
       </Reanimated.View>
       <Pressable onPress={animate} style={styles.button}>
         <Text>Press Me</Text>
@@ -56,6 +48,10 @@ const styles = StyleSheet.create({
   button: {
     position: 'absolute',
     bottom: 100,
+  },
+  inner: {
+    backgroundColor: 'green',
+    height: '100%',
   },
 });
 
