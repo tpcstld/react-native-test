@@ -5,54 +5,36 @@
  * @format
  */
 
+import {FlashList} from '@shopify/flash-list';
 import React from 'react';
-import Reanimated, {
-  useAnimatedStyle,
-  useSharedValue,
-} from 'react-native-reanimated';
-import {Pressable, View, StyleSheet, Text} from 'react-native';
+import {View, Text, StyleSheet} from 'react-native';
 
-function App(): JSX.Element {
-  const [value, setValue] = React.useState(false);
-  const height = useSharedValue(100);
-
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      backgroundColor: 'red',
-      height: height.value,
-      width: '100%',
-    };
-  });
-
-  const animate = React.useCallback(() => {
-    setValue(v => !v);
-    height.value = height.value === 100 ? 200 : 100;
-  }, [height]);
-
-  return (
-    <View style={styles.container}>
-      <Reanimated.View style={animatedStyle}>
-        <Reanimated.View key={value ? 1 : 2} style={styles.inner} />
-      </Reanimated.View>
-      <Pressable onPress={animate} style={styles.button}>
-        <Text>Press Me</Text>
-      </Pressable>
-    </View>
-  );
-}
+const HEIGHT = 40;
+const DATA = Array.from({length: 300}, (_, i) => i);
 
 const styles = StyleSheet.create({
   container: {
-    height: '100%',
-  },
-  button: {
-    position: 'absolute',
-    bottom: 100,
-  },
-  inner: {
+    flex: 1,
     backgroundColor: 'green',
-    height: '100%',
+  },
+  row: {
+    height: HEIGHT,
+    color: 'black',
   },
 });
 
-export default App;
+function renderItem({item}: {item: number}) {
+  return <Text style={styles.row}>{item}</Text>;
+}
+
+export default function App(): JSX.Element {
+  return (
+    <View style={styles.container}>
+      <FlashList
+        data={DATA}
+        renderItem={renderItem}
+        estimatedItemSize={HEIGHT}
+      />
+    </View>
+  );
+}
