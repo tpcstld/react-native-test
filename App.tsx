@@ -14,9 +14,11 @@ import {
   NativeSyntheticEvent,
   NativeScrollEvent,
 } from 'react-native';
+import FastList from './FastList';
 
+const NUM_ITEMS = 300;
 const HEIGHT = 40;
-const DATA = Array.from({length: 300}, (_, i) => i);
+const DATA = Array.from({length: NUM_ITEMS}, (_, i) => i);
 
 const isFabricEnabled = global?.nativeFabricUIManager != null;
 
@@ -40,11 +42,19 @@ function Item({item}: {item: number}) {
     mounted.current = true;
   }, []);
 
-  if (mounted.current) {
-    console.log('htht - render', item, performance.now() - startPoint);
-  } else {
-    console.log('htht - mount ', item, performance.now() - startPoint);
-  }
+  // if (mounted.current) {
+  //   console.log(
+  //     'htht - render',
+  //     `index:${item}`,
+  //     `ts:${performance.now() - startPoint}`,
+  //   );
+  // } else {
+  //   console.log(
+  //     'htht - mount',
+  //     `index:${item}`,
+  //     `ts:${performance.now() - startPoint}`,
+  //   );
+  // }
 
   return <Text style={styles.row}>{item}</Text>;
 }
@@ -53,6 +63,12 @@ function renderItem({item}: {item: number}) {
   return <Item item={item} />;
 }
 
+function renderFastItem(section: number, item: number) {
+  return <Item item={item} />;
+}
+
+let numScrollEvents = 0;
+
 export default function App(): JSX.Element {
   const handleScroll = React.useCallback(
     (e: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -60,15 +76,17 @@ export default function App(): JSX.Element {
 
       if (data - startPoint > 5000) {
         startPoint = data;
-        console.log('htht - starting', isFabricEnabled, data);
+        numScrollEvents = 0;
+        console.log('htht - starting', `isFabric:${isFabricEnabled}`);
       }
 
       console.log(
         'htht - scroll',
-        e.nativeEvent.velocity.y,
-        e.nativeEvent.contentOffset.y,
-        data - startPoint,
+        `num:${numScrollEvents}`,
+        `ts:${data - startPoint}`,
+        `y:${e.nativeEvent.contentOffset.y}`,
       );
+      numScrollEvents++;
     },
     [],
   );
@@ -79,13 +97,20 @@ export default function App(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <FlashList
+      <FastList
         onScroll={handleScroll}
-        onBlankArea={handleBlank}
-        data={DATA}
-        renderItem={renderItem}
-        estimatedItemSize={HEIGHT}
+        renderItem={renderFastItem}
+        itemSize={HEIGHT}
+        sections={[NUM_ITEMS]}
       />
     </View>
   );
 }
+
+// <FlashList
+//   onScroll={handleScroll}
+//   onBlankArea={handleBlank}
+//   data={DATA}
+//   renderItem={renderItem}
+//   estimatedItemSize={HEIGHT}
+// />
