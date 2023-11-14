@@ -13,6 +13,7 @@ import {
   StyleSheet,
   NativeSyntheticEvent,
   NativeScrollEvent,
+  unstable_batchedUpdates,
 } from 'react-native';
 import FastList from './FastList';
 
@@ -25,12 +26,12 @@ const isFabricEnabled = global?.nativeFabricUIManager != null;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: isFabricEnabled ? 'lightblue' : 'lightgreen',
+    backgroundColor: 'red',
   },
   row: {
     height: HEIGHT,
     color: 'black',
-    backgroundColor: 'red',
+    backgroundColor: isFabricEnabled ? 'lightblue' : 'lightgreen',
   },
 });
 
@@ -97,11 +98,10 @@ export default function App(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <FastList
-        onScroll={handleScroll}
-        renderItem={renderFastItem}
-        itemSize={HEIGHT}
-        sections={[NUM_ITEMS]}
+      <FlashList
+        data={DATA}
+        renderItem={renderItem}
+        estimatedItemSize={HEIGHT}
       />
     </View>
   );
@@ -113,4 +113,11 @@ export default function App(): JSX.Element {
 //   data={DATA}
 //   renderItem={renderItem}
 //   estimatedItemSize={HEIGHT}
+// />
+//
+// <FastList
+//   onScroll={handleScroll}
+//   renderItem={renderFastItem}
+//   itemSize={HEIGHT}
+//   sections={[NUM_ITEMS]}
 // />
