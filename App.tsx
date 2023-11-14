@@ -38,10 +38,10 @@ const styles = StyleSheet.create({
 let startPoint = 0;
 
 function Item({item}: {item: number}) {
-  const mounted = React.useRef(false);
-  React.useEffect(() => {
-    mounted.current = true;
-  }, []);
+  // const mounted = React.useRef(false);
+  // React.useEffect(() => {
+  //   mounted.current = true;
+  // }, []);
 
   // if (mounted.current) {
   //   console.log(
@@ -99,6 +99,8 @@ export default function App(): JSX.Element {
   return (
     <View style={styles.container}>
       <FlashList
+        // onScroll={handleScroll}
+        // onBlankArea={handleBlank}
         data={DATA}
         renderItem={renderItem}
         estimatedItemSize={HEIGHT}
