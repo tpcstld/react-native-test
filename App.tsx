@@ -5,121 +5,63 @@
  * @format
  */
 
-import {FlashList} from '@shopify/flash-list';
+import Reanimated, {
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from 'react-native-reanimated';
 import React from 'react';
+import {StyleSheet} from 'react-native';
 import {
-  View,
-  Text,
-  StyleSheet,
-  NativeSyntheticEvent,
-  NativeScrollEvent,
-  unstable_batchedUpdates,
-} from 'react-native';
-import FastList from './FastList';
-
-const NUM_ITEMS = 300;
-const HEIGHT = 40;
-const DATA = Array.from({length: NUM_ITEMS}, (_, i) => i);
-
-const isFabricEnabled = global?.nativeFabricUIManager != null;
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from 'react-native-gesture-handler';
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'red',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'blue',
   },
-  row: {
-    height: HEIGHT,
-    color: 'black',
-    backgroundColor: isFabricEnabled ? 'lightblue' : 'lightgreen',
+  rectangle: {
+    width: '100%',
+    backgroundColor: 'red',
   },
 });
 
-let startPoint = 0;
-
-function Item({item}: {item: number}) {
-  // const mounted = React.useRef(false);
-  // React.useEffect(() => {
-  //   mounted.current = true;
-  // }, []);
-
-  // if (mounted.current) {
-  //   console.log(
-  //     'htht - render',
-  //     `index:${item}`,
-  //     `ts:${performance.now() - startPoint}`,
-  //   );
-  // } else {
-  //   console.log(
-  //     'htht - mount',
-  //     `index:${item}`,
-  //     `ts:${performance.now() - startPoint}`,
-  //   );
-  // }
-
-  return <Text style={styles.row}>{item}</Text>;
-}
-
-function renderItem({item}: {item: number}) {
-  return <Item item={item} />;
-}
-
-function renderFastItem(section: number, item: number) {
-  return <Item item={item} />;
-}
-
-let numScrollEvents = 0;
-
 export default function App(): JSX.Element {
-  const handleScroll = React.useCallback(
-    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const data = performance.now();
+  const height = useSharedValue(100);
 
-      if (data - startPoint > 5000) {
-        startPoint = data;
-        numScrollEvents = 0;
-        console.log('htht - starting', `isFabric:${isFabricEnabled}`);
-      }
+  const style = useAnimatedStyle(() => {
+    return {
+      height: withSpring(height.value),
+    };
+  });
 
-      console.log(
-        'htht - scroll',
-        `num:${numScrollEvents}`,
-        `ts:${data - startPoint}`,
-        `y:${e.nativeEvent.contentOffset.y}`,
-      );
-      numScrollEvents++;
-    },
-    [],
-  );
+  const gesture = React.useMemo(() => {
+    return Gesture.Pan()
+      .enabled(true)
+      .onChange(event => {
+        height.value = Math.max(0, height.value + event.changeY);
+      });
+  }, [height]);
 
-  const handleBlank = React.useCallback(() => {
-    console.log('htht - blank', performance.now() - startPoint);
-  }, []);
+  // useAnimatedReaction(
+  //   () => height.value,
+  //   value => {
+  //     console.log('htht', value);
+  //   },
+  // );
 
   return (
-    <View style={styles.container}>
-      <FlashList
-        // onScroll={handleScroll}
-        // onBlankArea={handleBlank}
-        data={DATA}
-        renderItem={renderItem}
-        estimatedItemSize={HEIGHT}
-      />
-    </View>
+    <GestureHandlerRootView>
+      <GestureDetector gesture={gesture}>
+        <Reanimated.View style={styles.container}>
+          <Reanimated.View style={[styles.rectangle, style]} />
+        </Reanimated.View>
+      </GestureDetector>
+    </GestureHandlerRootView>
   );
 }
-
-// <FlashList
-//   onScroll={handleScroll}
-//   onBlankArea={handleBlank}
-//   data={DATA}
-//   renderItem={renderItem}
-//   estimatedItemSize={HEIGHT}
-// />
-//
-// <FastList
-//   onScroll={handleScroll}
-//   renderItem={renderFastItem}
-//   itemSize={HEIGHT}
-//   sections={[NUM_ITEMS]}
-// />

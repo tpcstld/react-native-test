@@ -1,0 +1,48 @@
+I been working to migrate my app from Paper to Fabric. One of the roadblocks appears to be that we see additional list blanking when using virtualized lists. The two virtualized lists that I've been testing is [`FlashList`](https://github.com/Shopify/flash-list) and [a homegrown one](https://github.com/tpcstld/react-native-test/blob/fabric-scrolling/FastList.tsx).
+
+For the rest of this issue, I'll focus my explanation based on `FlashList` on Android. FlashList because it's the more popular library, and Android because I have not yet tested any other platform.
+
+From my debugging, I believe that (part of) the increase in blanking can be attributed to [`setState`](https://github.com/Flipkart/recyclerlistview/blob/afd0a8bb92353e40d3cacdd7fb413560cef4e7ec/src/core/RecyclerListView.tsx#L610-L612) calls getting batched into a single [`render`](https://github.com/Flipkart/recyclerlistview/blob/afd0a8bb92353e40d3cacdd7fb413560cef4e7ec/src/core/RecyclerListView.tsx#L741). This seems to delay the `render`, which delays new list items appearing on the screen, which increases blanking. This batching does not appear on Paper, but it's probably more because of concurrent mode than the implementation of Fabric in itself.
+
+For example, in the following video, you can see that the blanking _roughly_ correlates with when the `setState` calls are getting batched:
+
+https://github.com/facebook/react-native/assets/5456182/e10e58d0-b49c-498a-9cdc-f585b39455f4
+
+If I hack [React internals](https://github.com/facebook/react-native/blob/ad0f0648527807883d6fb4a8f9890e041312e1d1/packages/react-native/Libraries/Renderer/implementations/ReactNativeRenderer-dev.js#L8108) to force `setState`s to always use `SyncLane` then this problem doesn't occur (as badly). I'm wondering if there's some sanctioned API I can use to kinda... `setState` like that. Perhaps some version of `flushSync` in `react-dom`?
+
+(Even after the above hack I still observe worse list blanking on Fabric, but I haven't been able to further isolate things yet. I dunno if you folks have any ideas, but we can leave any other issues out of this issue. :P) 
+
+
+
+The high level steps is basically:
+
+1. Get a react-native project with a virtualized list. I've included my test project below.
+2. Render a few hundred items in the list.
+3. Scroll. To make it a little more scientific I've been using ADB commands like `adb shell "input touchscreen swipe 200 800 200 200 100"`
+
+You should be able to observe that blanking is worse on Fabric than Paper.
+
+Here are some videos of me trying it out. In these videos I'm using a Samsung Galaxy A11, I found that weaker phones allow us to more clearly see the problem.
+
+<table>
+<tr>
+ <td>Paper (Prod)
+ <td>Fabric (Prod)
+<tr>
+ <td> <video src="https://github.com/facebook/react-native/assets/5456182/1f125f24-e977-4866-bd8e-38a15862ab14">
+ <td> <video src="https://github.com/facebook/react-native/assets/5456182/b3038c70-9717-4d8f-a384-5e9e4c4a92d2">
+</table>
+
+Unfortunately I couldn't figure out how to make the `SyncLane` change in a prod build so here is a dev build comparison of the hack.
+<table>
+<tr>
+ <td> Fabric (Dev, Base)
+ <td> Fabric (Dev, Hack)
+<tr>
+ <td> <video src="https://github.com/facebook/react-native/assets/5456182/22b55bd7-423c-46fe-af2a-1f311867c74a">
+ <td> <video src="https://github.com/facebook/react-native/assets/5456182/a7c57bf4-d2c6-4713-9b60-91bd1f45228a">
+</table>
+
+
+
+
