@@ -5,63 +5,39 @@
  * @format
  */
 
-import Reanimated, {
-  useAnimatedReaction,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
 import React from 'react';
-import {StyleSheet} from 'react-native';
 import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from 'react-native-gesture-handler';
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'blue',
-  },
-  rectangle: {
-    width: '100%',
-    backgroundColor: 'red',
-  },
-});
+  Button,
+  LayoutChangeEvent,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
+import {Freeze} from 'react-freeze';
 
 export default function App(): JSX.Element {
-  const height = useSharedValue(100);
+  const [freeze, setFreeze] = React.useState(false);
+  const [lastLayout, setLastLayout] = React.useState({width: 0, height: 0});
 
-  const style = useAnimatedStyle(() => {
-    return {
-      height: withSpring(height.value),
-    };
-  });
+  function handlePress() {
+    setFreeze(!freeze);
+  }
 
-  const gesture = React.useMemo(() => {
-    return Gesture.Pan()
-      .enabled(true)
-      .onChange(event => {
-        height.value = Math.max(0, height.value + event.changeY);
-      });
-  }, [height]);
-
-  // useAnimatedReaction(
-  //   () => height.value,
-  //   value => {
-  //     console.log('htht', value);
-  //   },
-  // );
+  function handleLayout(e: LayoutChangeEvent) {
+    const {width, height} = e.nativeEvent.layout;
+    setLastLayout({width, height});
+  }
 
   return (
-    <GestureHandlerRootView>
-      <GestureDetector gesture={gesture}>
-        <Reanimated.View style={styles.container}>
-          <Reanimated.View style={[styles.rectangle, style]} />
-        </Reanimated.View>
-      </GestureDetector>
-    </GestureHandlerRootView>
+    <SafeAreaView>
+      <Button title="Toggle Freeze" onPress={handlePress} />
+      <Text>{JSON.stringify(lastLayout)}</Text>
+      <Freeze freeze={freeze}>
+        <ScrollView>
+          <Text onLayout={handleLayout}>hello</Text>
+        </ScrollView>
+      </Freeze>
+    </SafeAreaView>
   );
 }
